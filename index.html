@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
   :root{
     --ink:#16283a;        /* dusk-sky navy, from the evening path shot */
@@ -66,6 +68,12 @@
   }
   .heart-tag.on-dark{background:var(--ink);color:var(--ivory);border-color:var(--gold);}
   .heart-tag.on-dark::before{background:var(--gold);border-color:var(--gold);}
+
+  /* ---------- scroll progress ---------- */
+  .progress-bar{
+    position:fixed;top:0;left:0;height:3px;width:0%;
+    background:var(--gold);z-index:200;transition:width .1s linear;
+  }
 
   /* ---------- nav ---------- */
   header{
@@ -260,7 +268,99 @@
     content:"";position:absolute;inset:0;
     background-image: radial-gradient(rgba(246,241,230,0.14) 1px, transparent 1px);
     background-size:18px 18px;
+    pointer-events:none;
   }
+  #liveMap{position:absolute;inset:0;width:100%;height:100%;min-height:260px;filter:saturate(0.92) contrast(1.02);z-index:1;}
+  .leaflet-popup-content-wrapper{
+    border-radius:2px;font-family:'Inter',sans-serif;
+    background:var(--ink);color:var(--ivory);
+  }
+  .leaflet-popup-content{font-size:0.86rem;}
+  .leaflet-popup-content b{font-family:'Fraunces',serif;font-size:1rem;}
+  .leaflet-popup-tip{background:var(--ink);}
+  .map-visual .map-overlay-actions{
+    position:absolute;bottom:14px;left:14px;right:14px;z-index:401;
+    display:flex;gap:10px;pointer-events:none;
+  }
+  .map-visual .map-overlay-actions a{pointer-events:auto;}
+  .btn-sm{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 16px;font-size:0.76rem;letter-spacing:0.05em;text-transform:uppercase;
+    border-radius:2px;font-weight:500;background:var(--gold);color:var(--ink);
+    box-shadow:0 8px 18px rgba(0,0,0,0.28);transition:all .25s ease;
+  }
+  .btn-sm:hover{background:#dcae4b;transform:translateY(-1px);}
+  .btn-sm.ghost{background:rgba(22,40,58,0.85);color:#fff;border:1px solid rgba(255,255,255,0.35);}
+  .btn-sm.ghost:hover{background:rgba(22,40,58,1);}
+
+  /* ---------- lightbox ---------- */
+  [data-lightbox]{cursor:zoom-in;}
+  .lightbox-overlay{
+    position:fixed;inset:0;background:rgba(15,20,17,0.94);z-index:300;
+    display:flex;align-items:center;justify-content:center;padding:40px;
+    opacity:0;pointer-events:none;transition:opacity .35s ease;
+  }
+  .lightbox-overlay.open{opacity:1;pointer-events:auto;}
+  .lightbox-overlay img{
+    max-width:min(1100px,92vw);max-height:86vh;object-fit:contain;
+    border-radius:2px;box-shadow:0 30px 70px rgba(0,0,0,0.5);
+    transform:scale(0.96);transition:transform .35s ease;
+  }
+  .lightbox-overlay.open img{transform:scale(1);}
+  .lightbox-close{
+    position:absolute;top:28px;right:32px;width:42px;height:42px;
+    border:1px solid rgba(255,255,255,0.4);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-size:1.4rem;transition:all .25s ease;
+  }
+  .lightbox-close:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .lightbox-cap{
+    position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+    font-family:'Caveat',cursive;font-size:1.3rem;color:var(--gold);text-align:center;
+  }
+
+  /* ---------- testimonial ---------- */
+  .testimonial{
+    background:var(--evergreen);color:var(--ivory);
+    padding:96px 0;position:relative;overflow:hidden;
+  }
+  .testimonial::before{
+    content:"”";position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+    font-family:'Fraunces',serif;font-size:16rem;color:rgba(246,241,230,0.06);line-height:1;
+  }
+  .testimonial-inner{position:relative;max-width:760px;margin:0 auto;text-align:center;}
+  .testimonial-inner .stars{color:var(--gold);font-size:1.2rem;letter-spacing:4px;margin-bottom:26px;}
+  .testimonial-inner blockquote{
+    font-family:'Fraunces',serif;font-style:italic;font-weight:500;
+    font-size:clamp(1.4rem,2.6vw,2rem);line-height:1.5;margin-bottom:26px;
+  }
+  .testimonial-inner cite{
+    font-family:'Inter',sans-serif;font-style:normal;font-size:0.86rem;
+    letter-spacing:0.05em;text-transform:uppercase;color:var(--gold);
+  }
+
+  /* ---------- faq ---------- */
+  .faq{background:var(--ivory-dim);}
+  .faq-list{max-width:760px;}
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{
+    width:100%;text-align:left;background:none;border:none;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:20px;
+    padding:24px 4px;font-family:'Fraunces',serif;font-size:1.1rem;color:var(--ink);
+  }
+  .faq-q .plus{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;position:relative;transition:transform .3s ease;
+  }
+  .faq-q .plus::before,.faq-q .plus::after{content:"";position:absolute;background:var(--ink);}
+  .faq-q .plus::before{width:10px;height:1.4px;}
+  .faq-q .plus::after{width:1.4px;height:10px;transition:opacity .25s ease;}
+  .faq-item.open .faq-q .plus{transform:rotate(45deg);border-color:var(--gold);}
+  .faq-item.open .faq-q .plus::before,.faq-item.open .faq-q .plus::after{background:var(--gold);}
+  .faq-a{
+    max-height:0;overflow:hidden;transition:max-height .4s ease;
+  }
+  .faq-a p{padding:0 4px 24px;color:#454f47;font-size:0.98rem;max-width:640px;}
 
   /* ---------- footer ---------- */
   footer{background:var(--ink);color:rgba(246,241,230,0.85);padding:64px 0 30px;}
@@ -302,6 +402,14 @@
 </style>
 </head>
 <body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="lightbox-overlay" id="lightbox">
+  <div class="lightbox-close" id="lightboxClose">&times;</div>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-cap" id="lightboxCap"></div>
+</div>
 
 <header id="siteHeader">
   <div class="wrap">
@@ -351,7 +459,7 @@
         </div>
       </div>
       <div class="welcome-figure reveal">
-        <img src="images/garden-hedges.jpg" alt="Curved clipped hedges bordering a stone path and lawn at Maya's Garden">
+        <img src="images/garden-hedges.jpg" alt="Curved clipped hedges bordering a stone path and lawn at Maya's Garden" data-lightbox data-cap="Curved hedges bordering the main lawn">
         <span class="heart-tag">est. by hand</span>
       </div>
     </div>
@@ -366,19 +474,27 @@
       <p>From above, the garden reveals its shape: manicured lawns folding into working vegetable beds, a stone path that curves rather than cuts, and hedges grown thick enough to hold their own line.</p>
     </div>
     <div class="grounds-grid reveal">
-      <div class="g-item g-1">
+      <div class="g-item g-1" data-lightbox data-cap="Lawns, paths &amp; a garden that still grows food">
         <img src="images/aerial-grounds.jpg" alt="Aerial view of Maya's Garden showing lawns, a curved stone path and vegetable beds">
         <div class="cap"><span class="k">From above</span><span class="t">Lawns, paths &amp; a garden that still grows food</span></div>
       </div>
-      <div class="g-item g-2">
+      <div class="g-item g-2" data-lightbox data-cap="The path at last light">
         <img src="images/garden-path-dusk.jpg" alt="A garden pathway at dusk lined with trees and hedges">
         <div class="cap"><span class="k">Golden hour</span><span class="t">The path at last light</span></div>
       </div>
-      <div class="g-item g-3">
+      <div class="g-item g-3" data-lightbox data-cap="Hand-shaped hedges, hand-set stone">
         <img src="images/garden-hedges.jpg" alt="Round hedges and a circular stone bed with terracotta pots">
         <div class="cap"><span class="k">Detail</span><span class="t">Hand-shaped hedges, hand-set stone</span></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="testimonial">
+  <div class="wrap testimonial-inner reveal">
+    <div class="stars">★★★★☆</div>
+    <blockquote>Visitors describe a beautiful, well-kept garden with spectacular scenery &mdash; the kind of place that photographs itself.</blockquote>
+    <cite>Summarised from guest reviews on Google</cite>
   </div>
 </section>
 
@@ -403,7 +519,7 @@
       </div>
       <div class="weddings-figure reveal">
         <div class="frame-line"></div>
-        <img src="images/wedding-bicycle.jpg" alt="A white bicycle decorated with white roses and a heart-shaped sign reading Happily Ever After">
+        <img src="images/wedding-bicycle.jpg" alt="A white bicycle decorated with white roses and a heart-shaped sign reading Happily Ever After" data-lightbox data-cap="Happily Ever After &mdash; the getaway bicycle">
         <span class="heart-tag">Happily Ever After</span>
       </div>
     </div>
@@ -452,10 +568,38 @@
         <p class="visit-note">Rated 4 out of 5 on Google from a small handful of reviews &mdash; guests describe the garden as beautiful, with spectacular scenery that photographs very well.</p>
       </div>
       <div class="map-visual">
-        <div class="pin">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 10.5c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10.5" r="2.6"/></svg>
-          <span>Zomba, Malawi</span>
+        <div id="liveMap" role="img" aria-label="Map showing the location of Maya's Garden and Bridal Services in Zomba, Malawi"></div>
+        <div class="map-overlay-actions">
+          <a class="btn-sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=-15.4047,35.3065">Get directions</a>
+          <a class="btn-sm ghost" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-15.4047&mlon=35.3065#map=16/-15.4047/35.3065">Open in OpenStreetMap</a>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow-row"><span class="heart-tag">Good to know</span><span class="rule"></span></div>
+      <h2>A few common questions</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q"><span>Can I just visit to look around, without booking an event?</span><span class="plus"></span></button>
+        <div class="faq-a"><p>Yes &mdash; the garden is open to visitors every day between 10:00 and 17:00. No appointment is needed for a general visit; booking ahead only matters if you'd like to reserve the grounds for a wedding or event.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>How far in advance should I enquire about a wedding date?</span><span class="plus"></span></button>
+        <div class="faq-a"><p>As with most garden venues, popular dates and weekends go first. It's worth calling as early as possible once you have a date in mind, so the team can confirm availability and talk through what you need.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Is the garden suitable for engagement or portrait photography alone?</span><span class="plus"></span></button>
+        <div class="faq-a"><p>Very much so. The archway entrance, stone stairway and hedge-lined paths are used for full weddings and standalone photo sessions alike &mdash; call ahead to check what's available on the day you have in mind.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Where exactly is the garden, and how do I get there?</span><span class="plus"></span></button>
+        <div class="faq-a"><p>Maya's Garden sits near the centre of Zomba, at plus code H8W4+4H5. Use the "Get directions" button on the map above to route from wherever you're starting &mdash; it opens turn-by-turn directions on your phone or computer.</p></div>
       </div>
     </div>
   </div>
@@ -493,10 +637,15 @@
   </div>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
   const header = document.getElementById('siteHeader');
+  const progressBar = document.getElementById('progressBar');
   window.addEventListener('scroll', () => {
     header.classList.toggle('scrolled', window.scrollY > 40);
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+    progressBar.style.width = pct + '%';
   });
 
   const revealEls = document.querySelectorAll('.reveal');
@@ -516,6 +665,74 @@
       if (target) {
         e.preventDefault();
         target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  /* ---------- live map (OpenStreetMap via Leaflet, no API key needed) ---------- */
+  const GARDEN_LAT = -15.4047, GARDEN_LNG = 35.3065;
+  const mapEl = document.getElementById('liveMap');
+  if (mapEl && window.L) {
+    const map = L.map('liveMap', {
+      center: [GARDEN_LAT, GARDEN_LNG],
+      zoom: 15,
+      scrollWheelZoom: false,
+      attributionControl: true
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const gardenIcon = L.divIcon({
+      className: 'garden-pin',
+      html: '<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;background:#c69a3f;border:2px solid #16283a;transform:rotate(-45deg);box-shadow:0 3px 8px rgba(0,0,0,0.35);"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 16]
+    });
+    L.marker([GARDEN_LAT, GARDEN_LNG], { icon: gardenIcon }).addTo(map)
+      .bindPopup('<b>Maya\'s Garden &amp; Bridal Services</b><br>H8W4+4H5, Zomba, Malawi<br>Open daily, 10:00&ndash;17:00')
+      .openPopup();
+
+    /* let scroll-zoom take over only once the visitor has clicked into the map */
+    map.on('click', () => map.scrollWheelZoom.enable());
+    mapEl.addEventListener('mouseleave', () => map.scrollWheelZoom.disable());
+  }
+
+  /* ---------- lightbox ---------- */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCap = document.getElementById('lightboxCap');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  document.querySelectorAll('[data-lightbox]').forEach(el => {
+    el.addEventListener('click', () => {
+      const img = el.tagName === 'IMG' ? el : el.querySelector('img');
+      if (!img) return;
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightboxCap.textContent = el.getAttribute('data-cap') || img.alt;
+      lightbox.classList.add('open');
+    });
+  });
+  function closeLightbox(){ lightbox.classList.remove('open'); }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  /* ---------- faq accordion ---------- */
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const btn = item.querySelector('.faq-q');
+    const answer = item.querySelector('.faq-a');
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(open => {
+        open.classList.remove('open');
+        open.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
       }
     });
   });
